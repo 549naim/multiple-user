@@ -5,9 +5,9 @@ from .views import *
 urlpatterns = [
    path('signup/freelancer/',FreelancerSignupView.as_view()),
    path('signup/client/',ClientSignupView.as_view()),
-   path('login/',CustomAuthToken.as_view(),name='auth-token'),
+   path('login/',CustomAuthToken.as_view(),name='login'),
    path('logout/',LogoutView.as_view(),name='logout'),
    path('freelancer/dashboard/',FreelancerOnlyView.as_view(),name='freelancerview'),
    path('client/dashboard/',ClientOnlyView.as_view(),name='client'),
-   
+   path('emailverify/',VerifyEmail.as_view(),name='emailverify'),
 ]

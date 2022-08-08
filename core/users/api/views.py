@@ -1,4 +1,5 @@
 from multiprocessing import context
+import token
 from rest_framework import generics,status
 from rest_framework.response import Response
 from .serializers import *
@@ -7,17 +8,41 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.views import APIView
 from rest_framework import permissions
 from .permissions import *
+from rest_framework_simplejwt.tokens import RefreshToken
+from users.models import User
+from .utils import Util
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+
 class FreelancerSignupView(generics.GenericAPIView):
     serializer_class =FreelancerSignupSerializer
     def post(self, request, *args, **kwargs):
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user=serializer.save()
+        user_data=serializer.data
+        user =User.objects.get(email=user_data['email'])
+
+        token=RefreshToken.for_user(user).access_token
+        
+        current_site=get_current_site(request).domain
+        relativeLink=reverse('emailverify')
+       
+        absurl='http://'+current_site+relativeLink+"?token="+str(token)
+        email_body='Hi'+user.username+'Use the link for verify your Email \n' + absurl
+        data={'email_body':email_body,'to_email':user.email,'email_subject':"Verify your email"}
+        Util.send_email(data)
+        
+
         return Response({
             "user":UserSerializer(user,context=self.get_serializer_context()).data,
             "token":Token.objects.get(user=user).key,
             "message":"account created",
         })
+
+class VerifyEmail(generics.GenericAPIView):
+    def get(self):
+        pass
 
 
 class ClientSignupView(generics.GenericAPIView):
